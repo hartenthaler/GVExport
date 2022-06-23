@@ -182,18 +182,34 @@ class GVExport extends AbstractModule implements ModuleCustomInterface, ModuleCh
 		}
 
 		return $this->viewResponse($this->name() . '::page', [
-			'tree' => $tree,
-			'individual' => $individual,
-			'disposition' => false,
-			'title' => 'GVExport',
-			'vars' => $userDefaultVars,
-			'otypes' => $otypes,
-			'gve_config' => $GVE_CONFIG,
-            'cartempty' => !functionsClippingsCart::isIndividualInCart($tree),
-			'module' => $this,
+            'gvexport_css'  => route('module', ['module' => $this->name(), 'action' => 'Css']),
+			'tree'          => $tree,
+			'individual'    => $individual,
+            // unused parameter  'disposition' => false,
+			'title'         => 'GVExport',
+			'vars'          => $userDefaultVars,
+			'otypes'        => $otypes,
+			'gve_config'    => $GVE_CONFIG,
+            'cartempty'     => !functionsClippingsCart::isIndividualInCart($tree),
+			'module'        => $this,
 		]);
 	}
 
+    /**
+     * Where are the CCS specifications for this module stored?
+     *
+     * @return ResponseInterface
+     *
+     * @throws \JsonException
+     */
+    public function getCssAction() : ResponseInterface
+    {
+        return response(
+            file_get_contents($this->resourcesFolder() . 'css' . DIRECTORY_SEPARATOR . 'gvexport.css'),
+            200,
+            ['content-type' => 'text/css']
+        );
+    }
 
 	public function postChartAction(ServerRequestInterface $request): ResponseInterface
 	{

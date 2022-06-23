@@ -3,62 +3,42 @@
 namespace vendor\WebtreesModules\gvexport;
 
 use Fisharebest\Webtrees\I18N;
-use Fisharebest\Webtrees\Session;
+use Fisharebest\Webtrees\Individual;
+use Fisharebest\Webtrees\Tree;
+
+/*
+ * tbd: better documentation of all transferred variables
+ */
+
+/**
+ * @var string      $gvexport_css           used in javascript code as a link to the css file
+ * @var Tree        $tree                   used tree
+ * @var Individual  $individual             ?
+ // unused parameter $disposition
+ * @var string      $title                  title of this page
+ * @var array       $vars                   ?
+ * @var array       $otypes                 output file type options
+ * @var array       $gve_config             ?
+ * @var bool        $cartempty              are there any individuals (INDI records) in the clippings cart?
+ * @var ?           $module                 this module
+ */
 
 ?>
+
+<script type="text/javascript">
+    // stylesheet
+    var newSheet = document.createElement("link");
+    newSheet.setAttribute("rel","stylesheet");
+    newSheet.setAttribute("type","text/css");
+    newSheet.setAttribute("href","<?= $gvexport_css ?>");
+    document.head.appendChild(newSheet);
+</script>
+<script src="<?= $module->assetUrl('javascript/viz.js'); ?>"></script>
+<script src="<?= $module->assetUrl('javascript/panzoom.min.js'); ?>"></script>
 
 <h2 class="wt-page-title">
     <?= $title ?>
 </h2>
-
-<script src="<?= $module->assetUrl('javascript/viz.js'); ?>"></script>
-<script src="<?= $module->assetUrl('javascript/panzoom.min.js'); ?>"></script>
-
-<style>
-    .sidebar {
-        height: calc(100% - 200px);
-        width: 500px;
-        position: fixed;
-        z-index: 1050;
-        top: 200px;
-        left: 0;
-        border-top: 1px solid black;
-        border-right: 1px solid black;
-        padding-top: 0.5rem;
-        background-color: #fff;
-        display: flex;
-        flex-direction: column;
-    }
-
-
-    .sidebar__formfields {
-        overflow-x: hidden;
-        overflow-y: scroll;
-        flex-shrink: 1;
-    }
-
-    .sidebar__buttons {
-        border-top: 1px solid black;
-        padding: 0.5rem;
-    }
-
-    .sidebar__toggler {
-        position: fixed;
-        left: 0;
-        top: 400px; 
-        transform-origin: left bottom;
-        transform: rotate(90deg);
-    }
-    
-    .btn-hover {
-        float: right;
-        position: absolute;
-        right: 5px;
-        top: 5px;
-        z-index: 1100;
-    }
-</style>
-
 
 <form action="<?= $module->chartUrl($individual) ?>" method="post" class="wt-page-options sidebar d-print-none" id="gvexport">
 
@@ -90,20 +70,15 @@ use Fisharebest\Webtrees\Session;
                 document.getElementById(targetId).value = ids.join(', ')
             }
         </script>
-        <?php
-        // Check if the clippings cart is empty, to decide what options to allow
-        $cart = Session::get('cart', []);
-        $xrefs = array_keys($cart[$tree->name()] ?? []);
-        $cartempty = sizeof($xrefs) == 0;
-        if (!$cartempty) :
-        ?>
-        <div class="row form-group">
-            <label class="col-sm-4 col-form-label wt-page-options-label" for="vars[marknr]">Warning</label>
-            <div class="col-sm-8 wt-page-options-value">
-                <?= I18N::translate('You have items in the clippings cart, so clippings cart items will be used for the diagram instead of the below options.') ?>
+        <?php if (!$cartempty) { ?>
+            // Check if there are INDI records in the clippings cart, to decide what options to allow
+            <div class="row form-group">
+                <label class="col-sm-4 col-form-label wt-page-options-label" for="vars[marknr]">Warning</label>
+                <div class="col-sm-8 wt-page-options-value">
+                    <?= I18N::translate('You have items in the clippings cart, so clippings cart items will be used for the diagram instead of the below options.') ?>
+                </div>
             </div>
-        </div>
-        <?php endif; ?>
+        <?php } ?>
 
         <div class="row form-group">
             <label class=" col-sm-4 col-form-label wt-page-options-label" for="pid"><?= I18N::translate('Include anyone related to') ?></label>
@@ -406,7 +381,8 @@ use Fisharebest\Webtrees\Session;
                 </div>
             </div>
         </div>
-        <!--
+
+    <!--
 		<input type=" checkbox" name="vars[no_fams]" id="no_fams_var" value="no_fams\"" . ((isset($userDefaultVars[" no_fams"]) and $userDefaultVars["no_fams"]=="no_fams" ) ? " checked=" checked\"" : "" ) . " />" . "No family containers, just individuals
 		$out .= '</td></tr>';
 
@@ -451,13 +427,11 @@ use Fisharebest\Webtrees\Session;
                             $out .= '<input type="radio" name="vars[colorfam]" id="colorfam_var" value="default" onclick="document.setup_gvexport_allinontree.colorfam_custom_var.disabled=true;"' . ((isset($userDefaultVars[' colorfam']) and $userDefaultVars['colorfam']=="custom" ) ? '' : ' checked="checked"' ) . ' />' ; $out .='<input type="text" name="colorfam_default_var" id="colorfam_default_var" value="' . "Default" . '" readonly="readonly" style="background: ' . $GVE_CONFIG['dot']['colorfam'] . ';"/>' ; $out .='<input type="radio" name="vars[colorfam]" id="colorfam_var" value="custom" onclick="gve_enablecustomcolor(\' colorfam_custom_var\');"' . ((isset($userDefaultVars['colorfam']) and $userDefaultVars['colorfam']=="custom" ) ? ' checked="checked"' : '' ) . ' />' ; $defcustcol=isset($userDefaultVars['colorfam_custom']) ? $userDefaultVars['colorfam_custom'] : $GVE_CONFIG["dot"]["colorfam"]; <input type="text" name="colorfam_custom_var" id="colorfam_custom_var" value="$defcustcol" style="background-color: $defcustcol\"" . ((isset($userDefaultVars['colorfam']) and $userDefaultVars['colorfam'] == " custom") ? '' : ' disabled="disabled"' ) . " onblur=" document.setup_gvexport_allinontree.colorfam_custom_var.style.backgroundColor=document.setup_gvexport_allinontree.colorfam_custom_var.value;" />
                             $out .= '</td>
                     </tr>';
-
                 </table>
             </div>
         </td>
     </tr>
-
-   -->
+    -->
 
         <h3><?= /* I18N: Appearance heading */ I18N::translate('Output Settings') ?></h3>
         <div class="row form-group">
@@ -468,7 +442,7 @@ use Fisharebest\Webtrees\Session;
             </div>
         </div>
 
-        <!--
+    <!--
     <div class="row form-group">
         <label class="col-sm-4 col-form-label wt-page-options-label" for="pagebrk_var">Use Page Break</label>
         <div class="col-sm-8 wt-page-options-value">
@@ -476,7 +450,6 @@ use Fisharebest\Webtrees\Session;
         </div>
     </div>
     -->
-
 
     </div>
 
