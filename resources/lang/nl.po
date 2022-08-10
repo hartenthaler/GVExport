@@ -152,10 +152,6 @@ msgid "Generate a file for download"
 msgstr "Genereer een bestand om te downloaden"
 
 #: 
-msgid "Choose DOT if you don't have GraphViz installed on server."
-msgstr "Kies DOT als u GraphViz niet op de server heeft geïnstalleerd."
-
-#: 
 msgid "Number of iterations (MCLIMIT)"
 msgstr "Aantal iteraties (MCLIMIT)"
 
@@ -236,14 +232,34 @@ msgid "Abbreviated place names"
 msgstr "Verkorte plaatsnamen"
 
 #: 
-msgid "You have items in the clippings cart, so clippings cart items will be used for the diagram instead of the below options."
-msgstr "U heeft items in de stamboomknipsels, daarom worden die stamboomknipsels gebruikt voor het diagram in plaats van de onderstaande opties."
-
-#: 
 msgid "People to be included"
 msgstr "Inclusief de volgende personen"
 
 #: 
 msgid "Show Individual ID"
 msgstr "Toon persoons-ID"
+
+#: 
+msgid "Options limited as GraphViz not installed on server"
+msgstr "Opties beperkt omdat GraphViz niet op de server is geïnstalleerd"
+
+#: 
+msgid "Anyone"
+msgstr "Iedereen"
+
+#: 
+msgid "All relatives"
+msgstr "Alle verwanten"
+
+#: 
+msgid "You have items in the clippings cart, which can be used for the diagram instead of the below options."
+msgstr "U heeft items in de stamboomknipsels, die gebruikt kunnen worden voor het diagram in plaats van de onderstaande opties."
+
+#: 
+msgid "Use clippings cart"
+msgstr "Gebruik stamboomknipsels"
+
+#: 
+msgid "Ignore clippings cart"
+msgstr "Negeer stamboomknipsels"
 

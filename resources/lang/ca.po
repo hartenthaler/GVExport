@@ -1,0 +1,253 @@
+msgid ""
+msgstr ""
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: POEditor.com\n"
+"Project-Id-Version: GVExport\n"
+"Language: ca\n"
+
+#: 
+msgid "Update"
+msgstr "Actualitzar"
+
+#: 
+msgid "Render serverside"
+msgstr "Renderitzar ajl servidor"
+
+#: 
+msgid "Reset"
+msgstr "Restabliment"
+
+#: 
+msgid "Diagram preferences"
+msgstr "Preferències de diagrama"
+
+#: 
+msgid "Appearance"
+msgstr "Aparença"
+
+#: 
+msgid "Output Settings"
+msgstr "Configuració d'eixida"
+
+#: 
+msgid "Include anyone related to"
+msgstr "Incloure a qualsevol persona relacionada amb"
+
+#: 
+msgid "Stop processing on"
+msgstr "Detindre el processament en"
+
+#: 
+msgid "Include Ancestors"
+msgstr "Incloure avantpassats"
+
+#: 
+msgid "Include"
+msgstr "Incloure"
+
+#: 
+msgid "Siblings"
+msgstr "germans"
+
+#: 
+msgid "Cousins"
+msgstr "Cosins"
+
+#: 
+msgid "Spouses"
+msgstr "Cònjuges"
+
+#: 
+msgid "Include Descendants"
+msgstr "Incloure descendents"
+
+#: 
+msgid "Max Levels"
+msgstr "Nivells màxims"
+
+#: 
+msgid "Mark not blood-related people with different color"
+msgstr "Marcar persones no consanguínies amb diferent color"
+
+#: 
+msgid "Add URL to individuals and families"
+msgstr "Agregar URL a individus i famílies"
+
+#: 
+msgid "Use abbreviated placenames"
+msgstr "Utilitzar topònims abreujats"
+
+#: 
+msgid "Show Birth Date"
+msgstr "Mostrar data de naixement"
+
+#: 
+msgid "Show Birth Place"
+msgstr "Mostrar indret de naixement"
+
+#: 
+msgid "Show Death Date"
+msgstr "Mostrar data de defunció"
+
+#: 
+msgid "Full Date"
+msgstr "Data completa"
+
+#: 
+msgid "Year"
+msgstr "Any"
+
+#: 
+msgid "Show Death Place"
+msgstr "Mostrar lloc de defunció"
+
+#: 
+msgid "Show Family ID"
+msgstr "Mostrar ID familiar"
+
+#: 
+msgid "Show Marriage Date"
+msgstr "Mostrar data de casament"
+
+#: 
+msgid "Show Marriage Place"
+msgstr "Mostrar indret de casament"
+
+#: 
+msgid "Graph Direction"
+msgstr "Direcció del gràfic"
+
+#: 
+msgid "Diagram Type"
+msgstr "Tipus de diagrama"
+
+#: 
+msgid "Simple"
+msgstr "Senzill"
+
+#: 
+msgid "Decorated"
+msgstr "Decorat"
+
+#: 
+msgid "Combined"
+msgstr "Combinat"
+
+#: 
+msgid "Add photos"
+msgstr "Afegir fotos"
+
+#: 
+msgid "Only Decorated or Combined"
+msgstr "Sols decorat o combinat"
+
+#: 
+msgid "Output File Type"
+msgstr "Tipus d'arxiu d'eixida"
+
+#: 
+msgid "Generate a file for download"
+msgstr "Generar arxiu per a descàrrega"
+
+#: 
+msgid "Number of iterations (MCLIMIT)"
+msgstr "Nombre d'iteracions (MCLIMIT)"
+
+#: 
+msgid "helps to reduce the crossings on the graph. This can be really slow (up to 10..15x compared to the 20 setting)"
+msgstr "Ajuda a reduir els encreuaments al gràfic. Això pot ser molt lent (fins a 10..15x en comparació amb la configuració de 20)"
+
+#: 
+msgid "DPI"
+msgstr "PPP"
+
+#: 
+msgid "Show Selection"
+msgstr "Mostrar selecció"
+
+#: 
+msgid "SVG only"
+msgstr "Només SVG"
+
+#: 
+msgid "Top-to-Bottom"
+msgstr "De d'alt a baix"
+
+#: 
+msgid "Left-to-Right"
+msgstr "D'esquerra a dreta"
+
+#: 
+msgid "Space between generations"
+msgstr "Espai entre generacions"
+
+#: 
+msgid "Space between individuals on the same level"
+msgstr "Espai entre individus del mateix nivell"
+
+#: 
+msgid "Error running GVExport in Browser mode"
+msgstr "Error en executar GVExport en manera navegador"
+
+#: 
+msgid "Preview"
+msgstr "Vista prèvia"
+
+#: 
+msgid "Download"
+msgstr "Descarregar"
+
+#: 
+msgid "Full place name"
+msgstr "Topònim complet"
+
+#: 
+msgid "City and Country"
+msgstr "Ciutat i país"
+
+#: 
+msgid "City and 2 Letter ISO Country Code"
+msgstr "Ciutat i codi de país ISO de dues lletres"
+
+#: 
+msgid "City and 3 Letter ISO Country Code"
+msgstr "Ciutat i codi de país ISO de tres lletres"
+
+#: 
+msgid "Space"
+msgstr "Espai"
+
+#: 
+msgid "Between generations"
+msgstr "Entre generacions"
+
+#: 
+msgid "Between individuals on the same level"
+msgstr "Entre individus del mateix nivell"
+
+#: 
+msgid "Abbreviated place names"
+msgstr "Topònims abreujats"
+
+#: 
+msgid "You have items in the clippings cart, so clippings cart items will be used for the diagram instead of the below options."
+msgstr "Té articles el cistell de retallades, per la qual cosa els elements del cistell s'utilitzaran per al diagrama en lloc de les següents opcions."
+
+#: 
+msgid "People to be included"
+msgstr "Persones a incloure"
+
+#: 
+msgid "Show Individual ID"
+msgstr "Mostrar ID individual"
+
+#: 
+msgid "Options limited as GraphViz not installed on server"
+msgstr "Opcions limitades, perquè GraphViz no està instal·lat al servidor"
+
+#: 
+msgid "Anyone"
+msgstr "Ningú"
+

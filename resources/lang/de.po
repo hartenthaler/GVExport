@@ -33,7 +33,7 @@ msgstr "Ausgabe-Einstellungen"
 
 #: 
 msgid "Include anyone related to"
-msgstr "Alle, die verwandt sind"
+msgstr "Alle, die verwandt sind mit"
 
 #: 
 msgid "Stop processing on"
@@ -152,10 +152,6 @@ msgid "Generate a file for download"
 msgstr "Erzeuge eine Datei zum Herunterladen"
 
 #: 
-msgid "Choose DOT if you don't have GraphViz installed on server."
-msgstr "W&auml;hlen sie DOT aus, wenn GraphViz nicht auf Ihrem Server installiert ist."
-
-#: 
 msgid "Number of iterations (MCLIMIT)"
 msgstr "Anzahl der Iterationen"
 
@@ -165,7 +161,7 @@ msgstr "Hilfreich um Überkreuzungen im Diagramm zu vermeiden (kann sehr langsam
 
 #: 
 msgid "DPI"
-msgstr "DPI (Zeichen pro Zoll)"
+msgstr "DPI (Punkte pro Zoll)"
 
 #: 
 msgid "Show Selection"
@@ -209,15 +205,15 @@ msgstr "Vollständige Ortsnamen"
 
 #: 
 msgid "City and Country"
-msgstr "Stadt und Staat"
+msgstr "Ort und Land"
 
 #: 
 msgid "City and 2 Letter ISO Country Code"
-msgstr "Stadt und 2-Buchstaben ISO-Länder-Code"
+msgstr "Ort und 2-Buchstaben ISO-Länder-Code"
 
 #: 
 msgid "City and 3 Letter ISO Country Code"
-msgstr "Stadt und 3-Buchstaben ISO-Länder-Code"
+msgstr "Ort und 3-Buchstaben ISO-Länder-Code"
 
 #: 
 msgid "Space"
@@ -236,14 +232,34 @@ msgid "Abbreviated place names"
 msgstr "Abgekürzte Ortsnamen"
 
 #: 
-msgid "You have items in the clippings cart, so clippings cart items will be used for the diagram instead of the below options."
-msgstr "Sie haben Datensätze im Sammelbehälter. Diese werden hier dargestellt und damit werden die untenstehenden Optionen ausgeblendet."
-
-#: 
 msgid "People to be included"
 msgstr "Einzubeziehende Personen"
 
 #: 
 msgid "Show Individual ID"
 msgstr "Zeige XREF einer Person"
+
+#: 
+msgid "Options limited as GraphViz not installed on server"
+msgstr "Optionen sind eingeschränkt, da GraphViz nicht auf dem Server installiert ist"
+
+#: 
+msgid "Anyone"
+msgstr "Jeder"
+
+#: 
+msgid "All relatives"
+msgstr "Alle Verwandten"
+
+#: 
+msgid "You have items in the clippings cart, which can be used for the diagram instead of the below options."
+msgstr "Es gibt Datensätze im Sammelbehälter, die für das Diagramm - statt der unten stehenden Optionen - verwendet werden können."
+
+#: 
+msgid "Use clippings cart"
+msgstr "Verwende den Sammelbehälter"
+
+#: 
+msgid "Ignore clippings cart"
+msgstr "Ignoriere den Sammelbehälter"
 

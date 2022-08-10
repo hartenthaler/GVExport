@@ -39,13 +39,20 @@ $GVE_CONFIG["graphviz_bin"] = "/usr/bin/dot"; // Default on Debian Linux
 
 $GVE_CONFIG["filename"] = "gvexport";
 
+// Test we can actually access GraphViz
+exec($GVE_CONFIG["graphviz_bin"] . " -V"." 2>&1", $stdout_output, $return_var);
+if ($return_var !== 0)
+{
+	$GVE_CONFIG["graphviz_bin"] = "";
+}
+
 // Output file formats
 $GVE_CONFIG["output"]["dot"]["label"] = "DOT"; #ESL!!! 20090213
 $GVE_CONFIG["output"]["dot"]["extension"] = "dot";
 $GVE_CONFIG["output"]["dot"]["exec"] = "";
 $GVE_CONFIG["output"]["dot"]["cont_type"] = "text/plain; charset=utf-8";
 
-if ( !empty( $GVE_CONFIG["graphviz_bin"])) {
+if ( !empty( $GVE_CONFIG["graphviz_bin"]) && $GVE_CONFIG["graphviz_bin"] != "") {
 	$GVE_CONFIG["output"]["png"]["label"] = "PNG"; #ESL!!! 20090213
 	$GVE_CONFIG["output"]["png"]["extension"] = "png";
 	$GVE_CONFIG["output"]["png"]["exec"] = $GVE_CONFIG["graphviz_bin"] . " -Tpng -o" . $GVE_CONFIG["filename"] . ".png " . $GVE_CONFIG["filename"] . ".dot";
@@ -83,8 +90,8 @@ $GVE_CONFIG["dot"]["colorm"] = "#ADD8E6";	// Default color of male individuals (
 $GVE_CONFIG["dot"]["colorf"] = "#FFB6C1";	// Default color of female individuals (light pink)
 $GVE_CONFIG["dot"]["colorx"] = "#FCEAA1";	// Default color of Other gender individuals (light yellow)
 $GVE_CONFIG["dot"]["coloru"] = "#CCEECC";	// Default color of unknown gender individuals (light green)
-$GVE_CONFIG["dot"]["colorm_nr"] = "#F0F8F8";	// Default color of not blood-related male individuals
-$GVE_CONFIG["dot"]["colorf_nr"] = "#F8F2F2";	// Default color of not blood-related female individuals
+$GVE_CONFIG["dot"]["colorm_nr"] = "#EEF8F8";	// Default color of not blood-related male individuals
+$GVE_CONFIG["dot"]["colorf_nr"] = "#FDF2F2";	// Default color of not blood-related female individuals
 $GVE_CONFIG["dot"]["colorx_nr"] = "#FCF7E3";	// Default color of not blood-related Other gender individuals
 $GVE_CONFIG["dot"]["coloru_nr"] = "#D6EED6";	// Default color of not blood-related unknown gender individuals
 $GVE_CONFIG["dot"]["colorfam"] = "#FFFFE0";	// Default color of families (different light yellow)
@@ -112,7 +119,7 @@ $GVE_CONFIG["directions"]["TB"] = "Top-to-Bottom";
 $GVE_CONFIG["directions"]["LR"] = "Left-to-Right";
 
 // Font name
-$GVE_CONFIG["default_fontname"] = "Sans";
+$GVE_CONFIG["default_fontname"] = "Arial";
 
 // mclimit settings (number of iterations to help to reduce crossings)
 $GVE_CONFIG["default_mclimit"] = "50";
@@ -127,9 +134,11 @@ $GVE_CONFIG["settings"]["use_abbr_place"] = "Full place name";
 $GVE_CONFIG["settings"]["download"] = TRUE;
 
 // Deafult max levels of ancestors
-$GVE_CONFIG["settings"]["ance_level"] = 5;
+$GVE_CONFIG["settings"]["ance_level"] = 2;
 // Deafult max levels of descendants
-$GVE_CONFIG["settings"]["desc_level"] = 5;
+$GVE_CONFIG["settings"]["desc_level"] = 2;
+// By default, if there are clippings in the clippings cart then use them
+$GVE_CONFIG["settings"]["usecart"] = TRUE;
 
 // Debug mode (if set to true the DOT file & other debug info will be dumped on screen)
 $GVE_CONFIG["debug"] = FALSE;

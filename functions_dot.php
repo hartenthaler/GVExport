@@ -48,7 +48,7 @@ use Fisharebest\Webtrees\Registry;
 class Dot {
 	var $individuals = array();
 	var $families = array();
-	var $indi_search_method = array("ance" => FALSE, "desc" => FALSE, "spou" => FALSE, "sibl" => FALSE, "cous" => FALSE);
+	var $indi_search_method = array("ance" => FALSE, "desc" => FALSE, "spou" => FALSE, "sibl" => FALSE, "cous" => FALSE, "any" => FALSE);
 	var $font_size;
 	var $colors = array();
 	var $settings = array();
@@ -83,7 +83,7 @@ class Dot {
 		// Default settings
 		$this->settings["diagram_type"] = "simple";
 		$this->settings["diagram_type_combined_with_photo"] = true;
-		$this->settings["indi"] = "ALL";
+		$this->settings["indi"] = "";
 		$this->settings["multi_indi"] = FALSE;
 		$this->settings["use_pagesize"] = "";
 		$this->settings["page_margin"] = $GVE_CONFIG["default_margin"];
@@ -112,6 +112,7 @@ class Dot {
 
 		$this->settings["ance_level"] = $GVE_CONFIG["settings"]["ance_level"];
 		$this->settings["desc_level"] = $GVE_CONFIG["settings"]["desc_level"];
+		$this->settings["usecart"] = $GVE_CONFIG["settings"]["usecart"];
 
 		$this->settings["birth_text"] = $GVE_CONFIG["custom"]["birth_text"];
 		$this->settings["death_text"] = $GVE_CONFIG["custom"]["death_text"];
@@ -223,25 +224,104 @@ class Dot {
 			($this->settings["diagram_type_combined_with_photo"]));
 	}
 
-	function createIndiList () {
-			// -- DEBUG ---
-			// echo "INDI: " . $this->settings["indi"];
-			if ($this->settings["multi_indi"] == FALSE) {
-				$this->addIndiToList($this->settings["indi"], $this->indi_search_method["ance"], $this->indi_search_method["desc"], $this->indi_search_method["spou"], $this->indi_search_method["sibl"], TRUE, 0, $this->settings["ance_level"], $this->settings["desc_level"]);
-			} else {
-				// if multiple indis are defined
-				$indis = explode(",", $this->settings["indi"]);
-				for ($i=0;$i<count($indis);$i++) {
-					$this->addIndiToList(trim($indis[$i]), $this->indi_search_method["ance"], $this->indi_search_method["desc"], $this->indi_search_method["spou"], $this->indi_search_method["sibl"], TRUE, 0, $this->settings["ance_level"], $this->settings["desc_level"]);
+	/** Add formatting to name before adding to DOT
+	 * @param string $name full name of the person
+	 * @param string $pid XREF of the person, for adding to name if enabled
+	 * @return string Returns formatted name
+	 */
+	function formatName($name, $pid): string {
+		// Show nickname in quotes
+		$name = str_replace(array('<q class="wt-nickname">', '</q>'), array('"', '"'), $name);
+
+		// Show preferred name as underlined by replacing span with underline tags
+		$pos_start = strpos($name,'<span class="starredname">');
+		if ($pos_start !== false) {
+			$pos_end = strpos(substr($name, $pos_start), "</span>") + $pos_start;
+			if ($pos_end) {
+				$name = substr_replace($name, "_/U_", $pos_end, strlen("</span>"));
+			}
+			$name = str_replace('<span class="starredname">', '_U_', $name);
+		}
+		$name = strip_tags($name);
+		// We use _ instead of < >, remove tags, then switch them to proper tags. This lets
+		// us control the tags included in an environment where we don't normally have control
+		$name = str_replace("_U_", "<u>", $name);
+		$name = str_replace("_/U_", "</u> ", $name);
+
+		// If PID already in name (from another module), remove it so we don't add twice
+		$name = str_replace(" (" . $pid . ")", "", $name);
+		if ($this->settings["show_pid"]) {
+			// Show INDI id
+			$name = $name . " (" . $pid . ")";
+		}
+		return $name;
+	}
+
+	/** Checks if provided individual is related by
+	 * adoption to the provided family record
+	 * @param individual $i webtrees individual object for the person to check
+	 * @param family $f webtrees family object for the family to check against
+	 * @return string
+	 */
+	function checkIndiAdopted($i, $f) {
+		$fid = $f->xref();
+		$facts = $i->facts();
+		$adopfam_found = FALSE;
+		// Find out that actual family has adopters or not
+		foreach ($facts as $fact) {
+			if (substr_count($fact->gedcom(), "1 ADOP") > 0) {
+				$adop = preg_split("/\n/", $fact->gedcom());
+				foreach ($adop as $adopline) {
+					if (substr_count($adopline, "2 FAMC") > 0) {
+						$adopfamcline = preg_split("/@/", $adopline);
+						$adopfamid = $adopfamcline[1];
+
+						// Adopter family found
+						if ($adopfamid == $fid) {
+							$adopfam_found = TRUE;
+							// ---DEBUG---
+							if ($this->settings["debug"]) {
+									$this->printDebug("(".$i->xref().") -- ADOP record: " . preg_replace("/\n/", " | ", $fact->gedcom()) . "\n");
+							}
+							// -----------
+						}
+					}
+
+					if ($adopfam_found && substr_count($adopline, "3 ADOP") > 0) {
+						$adopfamcadopline = preg_split("/ /", $adopline);
+						$adopfamcadoptype = $adopfamcadopline[2];
+					}
 				}
 			}
+		}
+		if (!isset($adopfamcadoptype)) {
+			$adopfamcadoptype = "";
+		}
+		return $adopfamcadoptype;
+	}
+	function createIndiList () {
+		if ($this->settings["multi_indi"] == FALSE) {
+			$this->addIndiToList("Start | Code 15", $this->settings["indi"], $this->indi_search_method["ance"], $this->indi_search_method["desc"], $this->indi_search_method["spou"], $this->indi_search_method["sibl"], TRUE, 0, 0);
+		} else {
+			// if multiple indis are defined
+			$indis = explode(",", $this->settings["indi"]);
+			for ($i=0;$i<count($indis);$i++) {
+				$this->addIndiToList("Start | Code 16", trim($indis[$i]), $this->indi_search_method["ance"], $this->indi_search_method["desc"], $this->indi_search_method["spou"], $this->indi_search_method["sibl"], TRUE, 0, 0);
+			}
+		}
+		// -- DEBUG ---
+		if ($this->settings["debug"]) {
+			$this->printDebug("Finished individuals list: ".print_r($this->individuals), $ind);
+		}
+		// -------------
 	}
 
 	function createDOTDump() {
-		// Create the individuals list
-		if (!functionsClippingsCart::isIndividualInCart($this->tree)) {
+		// If no individuals in the clippings cart (or option chosen to overide), use standard method
+		if (!functionsClippingsCart::isIndividualInCart($this->tree) || !$this->settings["usecart"] ) {
 			$this->createIndiList();
 		} else {
+		// If individuals in clipping cart and option chosen to use them, then proceed
 			$functionsCC = new functionsClippingsCart($this->tree, $this->isPhotoRequired(), ($this->settings["diagram_type"] == "combined"));
 			$this->individuals = $functionsCC->getIndividuals();
 			$this->families = $functionsCC->getFamilies();
@@ -267,7 +347,7 @@ class Dot {
 					// We do not show those families which has no parents and children in case of "combined" view;
 					if ((isset($this->families[$fid]["has_children"]) && $this->families[$fid]["has_children"] == TRUE)
 							|| (isset($this->families[$fid]["has_parents"]) && $this->families[$fid]["has_parents"] == TRUE)
-							|| ($this->settings["indi"] == "ALL")) { #ESL!!! Fix for 4.2
+							) {
 						$out .= $this->printFamily($fid);
 					}
 				} elseif ($this->settings["diagram_type"] != "combined") {
@@ -498,16 +578,9 @@ class Dot {
 			$out .= "size=\"" . ($this->pagesize["x"] - $this->settings["page_margin"]) . "," . ($this->pagesize["y"] - $this->settings["page_margin"]) . "\"\n";
 			//$out .= "size=\"50, 50\"\n";
 		}
-		/*
-		if ($this->settings["diagram_type"] == "combined") {
-			$out .= "ranksep=\"0.50 equally\"\n";
-		} else {
-			$out .= "ranksep=\"0.30 equally\"\n";
-		}
-		$out .= "nodesep=\"0.30\"\n";
-		*/
-		$out .= "ranksep=\"" . str_replace("%"," ",$this->settings["ranksep"])*$this->settings["space_base"]/100 . " equally\"\n";
-		$out .= "nodesep=\"" . str_replace("%"," ",$this->settings["nodesep"])*$this->settings["space_base"]/100	 . "\"\n";
+
+		$out .= "ranksep=\"" . str_replace("%","",$this->settings["ranksep"])*$this->settings["space_base"]/100 . " equally\"\n";
+		$out .= "nodesep=\"" . str_replace("%","",$this->settings["nodesep"])*$this->settings["space_base"]/100	 . "\"\n";
 		$out .= "dpi=\"" . $this->settings["dpi"] . "\"\n";
 		$out .= "mclimit=\"" . $this->settings["mclimit"] . "\"\n";
 		$out .= "rankdir=\"" . $this->settings["graph_dir"] . "\"\n";
@@ -687,29 +760,8 @@ class Dot {
 				else
 					$name .= '<BR />' . $addname;//@@ Meliza Amity
 			}
-			$name = str_replace(array('<q class="wt-nickname">', '</q>'), array('"', '"'), $name); // Show nickname in quotes
-			$name = strip_tags($name);
-
-			//@@ $name = str_replace(array('<span class="starredname">','</span>'), array('_','_'), $name); //@@ replace starredname by <u> and </u>
-			//@@ replace starredname by <u> and </u>
-			//@@ $name = str_replace(array('<span class="starredname">','</span>'), array('<U>','</U>'), $name); //@@ replace starredname by <u> and </u>
-			//$name = str_replace(array('<span class="starredname">','</span>'), array("",""), $name); //@@ replace starredname by null till graphviz supports underline
-			//$name = strip_tags($name);
-
-			if ($this->settings["diagram_type"] == "simple") { //@@ Meliza Amity
-				$name = str_replace(array('<span class="starredname">', '</span>'), array('\"', '\"'), $name);
-				//$name = str_replace('"', '\"', $name); //@@ Meliza Amity Handle double quotes of nick-names in simple tree ...
-			} else {
-				$name = str_replace(array('<span class="starredname">', '</span>'), array('<FONT face="' . $this->settings["fontname"] . ' italic">', '</FONT>'), $name);
-			}
-
-			if ($this->settings["show_pid"]) {
-				// If PID already in name (from another module), remove it
-				$name = str_replace(" (" . $pid . ")", "", $name);
-				// Show INDI id
-				$name = $name . " (" . $pid . ")";
-			}
-			//$name = str_replace('"', '', $name); // To remove double quotes
+			// Handle webtrees tags for formatting name
+			$name = $this->formatName($name, $pid);
 		}
 
 		// --- Printing the INDI details ---
@@ -972,26 +1024,31 @@ class Dot {
 	 * @param boolean $sibl
 	 * @param boolean $rel
 	 */
-	function addIndiToList($pid, $ance = FALSE, $desc = FALSE, $spou = FALSE, $sibl = FALSE, $rel = TRUE, $ind = 0, $ance_level = 0, $desc_level = 0) {
+	function addIndiToList($sourcePID, $pid, $ance = FALSE, $desc = FALSE, $spou = FALSE, $sibl = FALSE, $rel = TRUE, $ind = 0, $level = 0) {
 		global $GVE_CONFIG, $pgv_changes, $GEDCOM;
+		$ance_level = $this->indi_search_method["ance"] ? $this->settings["ance_level"] : 0;
+		$desc_level = $this->indi_search_method["desc"] ? $this->settings["desc_level"] : 0;
 
 		$this->individuals[$pid]['pid'] = $pid;
 
+		// Overwrite the 'related' status if it was not set before or it's 'false' (for those people who are added as both related and non-related)
+		if (!isset($this->individuals[$pid]['rel']) || ($this->individuals[$pid]['rel'] == FALSE && $rel)) {
+			$this->individuals[$pid]['rel'] = $rel;
+		} else {
+			return false;
+		}
 		// --- DEBUG ---
 		if ($this->settings["debug"]) {
+			$individual = $this->getUpdatedPerson($pid);
+			$this->printDebug("Name: ".strip_tags($individual->fullName()), $ind);
+			$this->printDebug("Source PID: ".$sourcePID, $ind);
 			$this->printDebug("--- #$pid# ---\n", $ind);
 			$this->printDebug("{\n", $ind);
 			$ind++;
 			$this->printDebug("($pid) - INDI added to list\n", $ind);
-			$this->printDebug("($pid) - ANCE: $ance, DESC: $desc, SPOU: $spou, SIBL: $sibl, REL: $rel, IND: $ind, A_LEV: $ance_level, D_LEV: $desc_level\n", $ind);
+			$this->printDebug("($pid) - ANCE: $ance, DESC: $desc, SPOU: $spou, SIBL: $sibl, REL: $rel, IND: $ind, LEV: $level\n", $ind);
 		}
 		// -------------
-
-		// Overwrite the 'related' status if it was not set before or its 'false' (for those people who are added as both related and non-related)
-		if (!isset($this->individuals[$pid]['rel']) || ($this->individuals[$pid]['rel'] == FALSE)) {
-			$this->individuals[$pid]['rel'] = $rel;
-		}
-
 		// Add photo
 		if ($this->settings["diagram_type_combined_with_photo"] && $this->isPhotoRequired()) {
 			$this->individuals[$pid]["pic"] = $this->addPhotoToIndi($pid);
@@ -1076,19 +1133,9 @@ class Dot {
 				 	$this->families["F_$pid"]["husb_id"] = "";
 				}
 			}
-		} else {
 		}
 
-		if ($this->settings["indi"] == "ALL") { 	#ESL!!! 20090208 Fix for PGV 4.2
-			$fams = $i->childFamilies(); 	#ESL!!! 20090208 Fix for PGV 4.2
-			foreach ($fams as $fid) { 		#ESL!!! 20090208 Fix for PGV 4.2
-				$this->addFamToList($fid); 	#ESL!!! 20090208 Fix for PGV 4.2
-			}
-			$fams = $i->spouseFamilies(); 	#ESL!!! 20090208 Fix for PGV 4.2
-			foreach ($fams as $fid) { 		#ESL!!! 20090208 Fix for PGV 4.2
-				$this->addFamToList($fid); 	#ESL!!! 20090208 Fix for PGV 4.2
-			}
-		}
+
 
 		// Check that INDI is listed in stop pids (should we stop the tree processing or not?)
 		$stop_proc = FALSE;
@@ -1110,13 +1157,13 @@ class Dot {
 		{
 
 			// Add ancestors (parents)
-			if ($ance && $ance_level > 0) {
+			if ($ance && $level < $ance_level) {
 				// Get the list of families where the INDI is listed as CHILD
 				$famc = $i->childFamilies();
 
 				// --- DEBUG ---
 				if ($this->settings["debug"]) {
-					$this->printDebug("($pid) - adding ANCESTORS (ANCE_LEVEL: $ance_level)\n", $ind);
+					$this->printDebug("($pid) - adding ANCESTORS (LEVEL: $level)\n", $ind);
 					$this->printDebug("($pid) -- adding FAMs, where this INDI is listed as a child (to find his/her parents):\n", $ind);
 					//var_dump($fams);
 				}
@@ -1129,6 +1176,13 @@ class Dot {
 						$fid = $fam->xref();
 						// Get the family object
 						$f = $this->getUpdatedFamily($fid);
+
+						// First check if we are related to our own family
+						$adopfamcadoptype = $this->checkIndiAdopted($i, $f);
+						// Not related - so overide the initial setting
+						if ($adopfamcadoptype != "") {
+							$rel = false;
+						}
 
 						if (isset($this->families[$fid]["fid"]) && ($this->families[$fid]["fid"]== $fid)) {
 							// Family ID already added
@@ -1150,50 +1204,8 @@ class Dot {
 							// -------------
 						}
 
-						$adopfam_found = FALSE;
-						// Find out that actual family has adopters or not
-						$indifacts = $i->facts();
-						foreach ($indifacts as $fact) {
-							// --- DEBUG ---
-							if ($this->settings["debug"]) {
-								//var_dump($fact);
-							}
-							// -------------
-
-							// Workaround for 4.1.6, because the $fact is an object now not an array as before
-							if (is_array($fact))
-							{
-
-							if (substr_count($fact[1], "1 ADOP") >0) {
-								$adop = preg_split("/\n/", $fact[1]);
-								//var_dump($adop);
-								foreach ($adop as $adopline) {
-									if (substr_count($adopline, "2 FAMC") >0) {
-										$adopfamcline = preg_split("/@/", $adopline);
-										$adopfamid = $adopfamcline[1];
-										//print $adopfamid;
-
-										// Adopter family found
-										if ($adopfamid == $fid) {
-											$adopfam_found = TRUE;
-											// ---DEBUG---
-											if ($this->settings["debug"]) {
-												$this->printDebug("($pid) -- ADOP record: " . preg_replace("/\n/", " | ", $fact[1]) . "\n", $ind);
-											}
-											// -----------
-										}
-									}
-
-									if ($adopfam_found && substr_count($adopline, "3 ADOP") >0) {
-										$adopfamcadopline = preg_split("/ /", $adopline);
-										$adopfamcadoptype = $adopfamcadopline[2];
-										//print $adopfamcadoptype;
-									}
-								}
-							}
-
-							}
-						}
+						// Work out if indi has adoptive relationship to this family
+						$adopfamcadoptype = $this->checkIndiAdopted($i, $fam);
 
 						// Add father & mother
 						$h = $f->husband();
@@ -1211,14 +1223,14 @@ class Dot {
 							$this->families[$fid]["has_children"] = TRUE;
 							$this->families[$fid]["husb_id"] = $husb_id;
 
-							if ($adopfam_found && ($adopfamcadoptype == "BOTH" || $adopfamcadoptype == "HUSB")) {
+							if ($adopfamcadoptype == "BOTH" || $adopfamcadoptype == "HUSB") {
 								// --- DEBUG ---
 								if ($this->settings["debug"]) {
 									$this->printDebug("($pid) -- adding an _ADOPTING_ PARENT /FATHER/ with INDI id ($husb_id) from FAM ($fid):\n", $ind);
 									//var_dump($fams);
 								}
 								// -------------
-								$this->addIndiToList($husb_id, TRUE, FALSE, $this->indi_search_method["spou"], $this->indi_search_method["sibl"], FALSE, $ind, ($ance_level - 1), $desc_level);
+								$this->addIndiToList($pid."|Code 1", $husb_id, TRUE, FALSE, $this->indi_search_method["spou"], $this->indi_search_method["sibl"], FALSE, $ind, $level+1);
 							} else {
 								// --- DEBUG ---
 								if ($this->settings["debug"]) {
@@ -1226,21 +1238,21 @@ class Dot {
 									//var_dump($fams);
 								}
 								// -------------
-								$this->addIndiToList($husb_id, TRUE, FALSE, $this->indi_search_method["spou"], $this->indi_search_method["sibl"], $rel, $ind, ($ance_level - 1), $desc_level);
+								$this->addIndiToList($pid."|Code 2", $husb_id, TRUE, FALSE, $this->indi_search_method["spou"], $this->indi_search_method["sibl"], $rel, $ind, $level+1);
 							}
 						}
 						if (!empty($wife_id)) {
 							$this->families[$fid]["has_children"] = TRUE;
 							$this->families[$fid]["wife_id"] = $wife_id;
 
-							if ($adopfam_found && ($adopfamcadoptype == "BOTH" || $adopfamcadoptype == "WIFE")) {
+							if ($adopfamcadoptype == "BOTH" || $adopfamcadoptype == "WIFE") {
 								// --- DEBUG ---
 								if ($this->settings["debug"]) {
 									$this->printDebug("($pid) -- adding an _ADOPTING_ PARENT /MOTHER/ with INDI id ($wife_id) from FAM ($fid):\n", $ind);
 									//var_dump($fams);
 								}
 								// -------------
-								$this->addIndiToList($wife_id, TRUE, FALSE, $this->indi_search_method["spou"], $this->indi_search_method["sibl"], FALSE, $ind, ($ance_level - 1), $desc_level);
+								$this->addIndiToList($pid."|Code 3", $wife_id, TRUE, FALSE, $this->indi_search_method["spou"], $this->indi_search_method["sibl"], FALSE, $ind, $level+1);
 							} else {
 								// --- DEBUG ---
 								if ($this->settings["debug"]) {
@@ -1248,7 +1260,7 @@ class Dot {
 									//var_dump($fams);
 								}
 								// -------------
-								$this->addIndiToList($wife_id, TRUE, FALSE, $this->indi_search_method["spou"], $this->indi_search_method["sibl"], $rel, $ind, ($ance_level - 1), $desc_level);
+								$this->addIndiToList($pid."|Code 4", $wife_id, TRUE, FALSE, $this->indi_search_method["spou"], $this->indi_search_method["sibl"], $rel, $ind, $level+1);
 							}
 						}
 
@@ -1264,7 +1276,9 @@ class Dot {
 					if ($this->settings["diagram_type"] == "combined") {
 						// This person's spouse family HAS NO parents
 						foreach ($this->individuals[$pid]["fams"] as $s_fid=>$s_fam) {
-							$this->families[$s_fid]["has_parents"] = FALSE;
+							if (!isset($this->families[$s_fid]["has_parents"])) {
+								$this->families[$s_fid]["has_parents"] = FALSE;
+							}
 						}
 					}
 				}
@@ -1272,12 +1286,12 @@ class Dot {
 			}
 
 			// Add descendants (children)
-			if ($desc && $desc_level > 0) {
+			if ($desc && $level > -1*$desc_level) {
 				$fams = $i->spouseFamilies();
 
 				// --- DEBUG ---
 				if ($this->settings["debug"]) {
-					$this->printDebug("($pid) - adding DESCENDANTS (DESC_LEVEL: $desc_level)\n", $ind);
+					$this->printDebug("($pid) - adding DESCENDANTS (LEVEL: $level, DESC_LEVEL: $desc_level)\n", $ind);
 					$this->printDebug("($pid) -- adding FAMs, where this INDI is listed as a spouse (to find his/her children):\n", $ind);
 
 					//var_dump($fams);
@@ -1341,14 +1355,26 @@ class Dot {
 							}
 							// -------------
 
-							$this->addIndiToList($child_id, FALSE, TRUE, $this->indi_search_method["spou"], FALSE, TRUE, $ind, 0, ($desc_level - 1));
+							// Work out if indi has adoptive relationship to this family
+							$adopfamcadoptype = $this->checkIndiAdopted($child, $f);
+							if ($adopfamcadoptype != "") {
+								$related = false;
+							} else {
+								$related = $rel;
+							}
+
+							if ($this->indi_search_method["any"]) {
+								$this->addIndiToList($pid."|Code 14", $child_id, TRUE, FALSE, $this->indi_search_method["spou"], FALSE, FALSE, $ind, $level-1);
+							}
+							$this->addIndiToList($pid."|Code 5", $child_id, FALSE, TRUE, $this->indi_search_method["spou"], FALSE, $related, $ind, $level-1);
+
 						}
 					}
 				}
 			}
 
 			// Add spouses
-			if (($spou && !$desc) || ($spou && $desc && $desc_level > 0) || ($spou && $this->settings["diagram_type"] == "combined")) {
+			if (($spou && !$desc) || ($spou && $desc && $level > -1*$desc_level) || ($spou && $this->settings["diagram_type"] == "combined")) {
 				$fams = $i->spouseFamilies();
 
 				// --- DEBUG ---
@@ -1415,9 +1441,9 @@ class Dot {
 						// -------------
 
 						if ($this->settings["mark_not_related"] == TRUE) {
-							$this->addIndiToList($spouse_id, FALSE, FALSE, FALSE, FALSE, FALSE, $ind, $ance_level, $desc_level);
+							$this->addIndiToList($pid."|Code 6", $spouse_id, $this->indi_search_method["any"] && $ance, $this->indi_search_method["any"] && $desc, $this->indi_search_method["any"], $this->indi_search_method["any"], FALSE, $ind, $level);
 						} else {
-							$this->addIndiToList($spouse_id, FALSE, FALSE, FALSE, FALSE, TRUE, $ind, $ance_level, $desc_level);
+							$this->addIndiToList($pid."|Code 7", $spouse_id, $this->indi_search_method["any"], $this->indi_search_method["any"], $this->indi_search_method["any"], $this->indi_search_method["any"], TRUE, $ind, $level);
 						}
 					}
 
@@ -1425,12 +1451,12 @@ class Dot {
 			}
 
 			// Add siblings
-			if ($sibl && $ance_level > 0) {
+			if ($sibl && $level < $ance_level) {
 				$famc = $i->childFamilies();
 
 				// --- DEBUG ---
 				if ($this->settings["debug"]) {
-					$this->printDebug("($pid) - adding SIBLINGS (ANCE_LEVEL: $ance_level)\n", $ind);
+					$this->printDebug("($pid) - adding SIBLINGS (LEVEL: $level)\n", $ind);
 					$this->printDebug("($pid) -- adding FAMs, where this INDI is listed as a child (to find his/her siblings):\n", $ind);
 					//var_dump($fams);
 				}
@@ -1472,12 +1498,19 @@ class Dot {
 							}
 							// -------------
 
+							// Work out if indi has adoptive relationship to this family
+							$adopfamcadoptype = $this->checkIndiAdopted($child, $fam);
+							if ($adopfamcadoptype != "") {
+								$related = false;
+							} else {
+								$related = $rel;
+							}
+
 							// If searching for cousins, then the descendants of ancestors' siblings should be added
 							if ($this->indi_search_method["cous"]) {
-								//$this->addIndiToList($child_id, FALSE, TRUE, $this->indi_search_method["spou"], FALSE, TRUE, $ind, 0, ($this->settings["ance_level"] - $ance_level));
-								$this->addIndiToList($child_id, FALSE, TRUE, $this->indi_search_method["spou"], FALSE, TRUE, $ind, 0, ($this->settings["ance_level"] - $ance_level) + $this->settings["desc_level"]);
+								$this->addIndiToList($pid."|Code 8", $child_id, TRUE, TRUE, $this->indi_search_method["spou"], FALSE, $related, $ind, $level);
 							} else {
-								$this->addIndiToList($child_id, TRUE, FALSE, $this->indi_search_method["spou"], FALSE, TRUE, $ind, 1, 0);
+								$this->addIndiToList($pid."|Code 9", $child_id, TRUE, FALSE, $this->indi_search_method["spou"], FALSE, $related, $ind, $level);
 							}
 
 						}
@@ -1486,12 +1519,12 @@ class Dot {
 			}
 
 			// Add step-siblings
-			if ($sibl && $ance_level > 0) {
+			if ($sibl && $level < $ance_level) {
 				$fams = $i->childStepFamilies();
 
 				// --- DEBUG ---
 				if ($this->settings["debug"]) {
-					$this->printDebug("($pid) - adding STEP-SIBLINGS (ANCE_LEVEL: $ance_level)\n", $ind);
+					$this->printDebug("($pid) - adding STEP-SIBLINGS (LEVEL: $level)\n", $ind);
 					$this->printDebug("($pid) -- adding FAMs, where this INDI's parents are listed as spouses (to find his/her step-siblings):\n", $ind);
 					//var_dump($fams);
 				}
@@ -1522,17 +1555,16 @@ class Dot {
 							}
 							// -------------
 
-							// If searching for step-cusins, then the descendants of ancestors' siblings should be added
+							// If searching for step-cousins, then the descendants of ancestors' siblings should be added
 							if ($this->indi_search_method["cous"]) {
-								$this->addIndiToList($child_id, FALSE, TRUE, $this->indi_search_method["spou"], FALSE, TRUE, $ind, 0, ($this->settings["ance_level"] - $ance_level));
+								$this->addIndiToList($pid."|Code 10", $child_id, FALSE, TRUE, $this->indi_search_method["spou"], FALSE, $rel, $ind, $level);
 							} else {
-								$this->addIndiToList($child_id, TRUE, FALSE, $this->indi_search_method["spou"], FALSE, TRUE, $ind, 1, 0);
+								$this->addIndiToList($pid."|Code 11", $child_id, TRUE, FALSE, $this->indi_search_method["spou"], FALSE, $rel, $ind, $level);
 							}
 						}
 					}
 				}
 			}
-
 		}
 
 
@@ -1574,7 +1606,7 @@ class Dot {
 			return $m->downloadUrl('inline');
 		}
 		else if (!$m->isExternal() && $m->fileExists($this->file_system)) {
-			// If we are rendering in the browser, provide the URL, otherwise provide the server side file locartion
+			// If we are rendering in the browser, provide the URL, otherwise provide the server side file location
 			if (isset($_REQUEST["render"])) {
 				return Site::getPreference('INDEX_DIRECTORY').$this->tree->getPreference('MEDIA_DIRECTORY').$m->filename();
 			} else {
